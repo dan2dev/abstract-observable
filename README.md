@@ -11,13 +11,13 @@ npm install --save abstract-observable
 
 ### 1 - Create an observable class
 ```ts
-export class WantToObserved extends Observable {
+export class WantToBeObserved extends Observable {
   public someAction() {
     // do stuff here then notify
     this.notify();
   }
 }
-const observableInstance = new WantToObserved();
+const observableInstance = new WantToBeObserved();
 ```
 ### 2 - Create some observers
 ```ts
@@ -26,14 +26,19 @@ export class WantToObserve implements IObserver {
     // do stuff here
   }
 }
-export function observerFunction(): void {
+export function wantToObserveFunction(): void {
   // do some other stuff here
 }
 ```
 ### 3 - Subscribe the observers
 ```ts
+// subscribe class instance
 const observerInstance = new WantToObserve();
 const unsubscribeInstance = observableInstance.subscribe(observerInstance);
-observableInstance.subscribe(observerFunction);
+
+// subscribe function
+observableInstance.subscribe(wantToObserveFunction);
+
 // to unsubscribe call the return of subscribe
 unsubscribeInstance();
+```
