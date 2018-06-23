@@ -1,6 +1,6 @@
 {
   "name": "abstract-observable",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple typescript abstract class for observer pattern.",
   "main": "lib/main",
   "types": "@types/main",
