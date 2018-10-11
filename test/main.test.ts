@@ -18,7 +18,7 @@ test("basic", async (done) => {
   someRoot.newChildren();
   someRoot.newChildren();
   someRoot.newChildren();
-  value = "changed 2";
+  value = "changed - 2";
   expect(1).toBe(1);
   // done();
 });
