@@ -12,7 +12,6 @@ export interface IObservableData {
       };
     };
     parent: IObservable | undefined;
-    // notifying: Promise<void> | undefined;
     notifyStack: number;
     notifyResolve: Array<(value?: void | PromiseLike<void>) => void>
 
