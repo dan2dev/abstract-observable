@@ -15,7 +15,7 @@ export abstract class Observable implements IObservable {
       if (this._observable.observers.hasOwnProperty(i)) {
         const holder = this._observable.observers[i];
         if (typeof holder.notify === "object") {
-            (holder.notify as Observable).notify(false);
+            ((holder.notify as Observable).notify as ((asap: boolean) => void))(false);
         } else {
             (holder as IObserver).notify();
         }
@@ -29,9 +29,9 @@ export abstract class Observable implements IObservable {
       }
     }
   }
-  protected constructor(parent?: Observable);
-  protected constructor(observer?: IObserver);
-  protected constructor(...args: any[]) {
+  public constructor(parent?: Observable);
+  public constructor(observer?: IObserver);
+  public constructor(...args: any[]) {
     for (const arg of args) {
       if (arg && typeof (arg as IObserver).notify !== "undefined") {
         const parent: IObservable = (arg as IObservable);
@@ -65,6 +65,7 @@ export abstract class Observable implements IObservable {
       delete this._observable.observers[currentIndex];
     };
   }
+  public async notify(): Promise<void>;
   public async notify(asap = true): Promise<void> {
     this._observable.notifyStack += 1;
     return new Promise<void>((resolve, reject) => {
@@ -83,3 +84,4 @@ export abstract class Observable implements IObservable {
     });
   }
 } 
+

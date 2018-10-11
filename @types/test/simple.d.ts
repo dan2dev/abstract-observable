@@ -7,5 +7,5 @@ export declare class SomeChild extends Observable {
 export declare class SomeRoot extends Observable {
     children: SomeChild[];
     constructor();
-    newChildren(): Promise<void>;
+    newChildren(): void;
 }
