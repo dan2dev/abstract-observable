@@ -1,26 +1,22 @@
 import { Observable, IObserver } from "../src/main";
-export class DeliveryResource extends Observable {
-  public resourceId: number;
-  public constructor(root: Observable) {
-    super(root);
+
+export class SomeChild extends Observable {
+  public version: number = 0;
+  public async updateVersion(): Promise<void> {
+    this.version += 1;
+    this.notify();
+  }
+  public constructor(parent: Observable) {
+    super(parent);
   }
 }
-export class DeliveryBoy extends Observable {
-  public placeId: number = 0;
-  public resource: DeliveryResource;
+export class SomeRoot extends Observable {
+  public children: SomeChild[] = [];
   public constructor() {
     super();
   }
-  public changePlace(newPlaceId: number) {
-    this.placeId = newPlaceId;
+  public newChildren() {
+    this.children.push(new SomeChild(this));
+    this.notify();
   }
 }
-export class BoyController implements IObserver {
-  public updatedCount: number = 0;
-  public notify(): void {
-    this.updatedCount++;
-  }
-}
-test("class created", () => {
-  expect(true).toBe(true);
-});

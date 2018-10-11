@@ -1,19 +1,24 @@
 import { Observable, IObserver } from "../src/main";
-import { BoyController, DeliveryBoy, DeliveryResource } from "./simple";
+import { SomeChild, SomeRoot } from "./simple";
 
-const newDeliveryBoy1 = new DeliveryBoy();
-const boysController = new BoyController();
-newDeliveryBoy1.subscribe(boysController);
-newDeliveryBoy1.resource = new DeliveryResource(newDeliveryBoy1);
+const someRoot = new SomeRoot();
 
-test("basic", (done) => {
-  newDeliveryBoy1.changePlace(1);
-  newDeliveryBoy1.resource.notify().then(() => {
-    expect(boysController.updatedCount).toBe(1);
-    expect(newDeliveryBoy1.placeId).toBe(1);
-    newDeliveryBoy1.notify().then(() => {
-      expect(boysController.updatedCount).toBe(2);
-      done();
-    });
+test("basic", async (done) => {
+  var i: number = 0;
+  var value = "testing";
+  someRoot.subscribe(() => {
+    i += 1;
+    value = "changed notify";
   });
+  someRoot.subscribe(() =>{
+    expect(i).toBe(1);
+    done();
+  });
+  someRoot.newChildren();
+  someRoot.newChildren();
+  someRoot.newChildren();
+  someRoot.newChildren();
+  value = "changed 2";
+  expect(1).toBe(1);
+  // done();
 });

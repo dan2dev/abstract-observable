@@ -1,37 +1,63 @@
-import { IObserver } from "./observer";
-import { Global } from "./global";
-// let globalNotifying = false;
-interface IObserverData {
-  lastIndex: number;
-  observers: {
-    [index: number]: {
-      index: number;
-      notify: (() => void) | IObserver;
-    };
-  };
-  notifying: boolean;
-}
-export abstract class Observable {
-  private _observable: IObserverData = {
+import { IObserver } from "./interface/observer";
+import { IObservableData, IObservable } from "./interface/observable";
+import asapCall from "asap";
+
+export abstract class Observable implements IObservable {
+  private _observable: IObservableData = {
     lastIndex: 0,
     observers: {},
-    notifying: false,
+    notifyStack: 0,
+    notifyResolve: [],
+    parent: undefined
   };
-  constructor(parent?: Observable);
-  constructor(observer?: IObserver);
-  constructor(...args: any[]) {
-    for (const arg of args) {
-      if (arg && typeof (arg as IObserver).notify !== "undefined") {
-        const parent: IObserver = (arg as IObserver);
-        parent && this.subscribe(parent);
+  private notifyAllObservers(): void {
+    for (const i in this._observable.observers) {
+      if (this._observable.observers.hasOwnProperty(i)) {
+        const holder = this._observable.observers[i];
+        if (typeof holder.notify === "object") {
+            (holder.notify as Observable).notify(false);
+        } else {
+            (holder as IObserver).notify();
+        }
       }
     }
+    const resolvers = this._observable.notifyResolve;
+    while(resolvers.length > 0) {
+      const resolve = resolvers.shift();
+      if(resolve !== undefined) {
+        resolve();
+      }
+    }
+  }
+  protected constructor(parent?: Observable);
+  protected constructor(observer?: IObserver);
+  protected constructor(...args: any[]) {
+    for (const arg of args) {
+      if (arg && typeof (arg as IObserver).notify !== "undefined") {
+        const parent: IObservable = (arg as IObservable);
+        if (parent) {
+          this.subscribe(parent);
+        }
+      }
+    }
+  }
+  public getRoot(): IObservable | undefined {
+    let root = this.getParent();
+    while (root !== undefined) {
+      root = this.getParent();
+    }
+    if (root === undefined) {
+      root = this;
+    }
+    return root;
+  }
+  public getParent(): IObservable | undefined {
+    return this._observable.parent;
   }
   public subscribe(observer: (() => void) | IObserver): () => void {
     const currentIndex = this._observable.lastIndex++;
     this._observable.observers[currentIndex] = {
       index: currentIndex,
-      // notify: (typeof observer === "object") ? (observer as IObserver).update : (observer as () => void),
       notify: observer,
     };
     // * return unsubscribe method
@@ -39,38 +65,21 @@ export abstract class Observable {
       delete this._observable.observers[currentIndex];
     };
   }
-  public notify(): Promise<void> {
-    if (!this._observable.notifying) {
-      this._observable.notifying = true;
-      if (Global.isNotifying()) {
-        this.notifyAllObservers();
-      } else {
-        Global.startNotifying();
-        return new Promise<void>((resolve, reject) => {
-          setImmediate(() => {
-            this.notifyAllObservers();
-            Global.doneNotifying();
-            resolve();
-          });
-        });
-      }
-    }
-    return new Promise((resolve, reject) => {
-      resolve();
+  public async notify(asap = true): Promise<void> {
+    this._observable.notifyStack += 1;
+    return new Promise<void>((resolve, reject) => {
+      (this.getRoot() as this)._observable.notifyResolve.push(resolve);
+      const action: () => void = () => {
+          if (this._observable.notifyStack > 1) {
+              this._observable.notifyStack -= 1;
+          } else {
+              this.notifyAllObservers();
+          }
+      };
+      asap && asapCall(() => {
+        action();
+      });
+      !asap && action();
     });
   }
-  private notifyAllObservers(): void {
-    for (const i in this._observable.observers) {
-      if (this._observable.observers.hasOwnProperty(i)) {
-        const holder = this._observable.observers[i];
-        if (typeof holder.notify === "object") {
-          // holder.notify.notify.bind(holder.notify);
-          holder.notify.notify(); 
-        } else {
-          holder.notify();
-        }
-      }
-    }
-    this._observable.notifying = false;
-  }
-}
+} 

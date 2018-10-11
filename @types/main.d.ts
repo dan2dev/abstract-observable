@@ -1,2 +1,3 @@
 export * from "./observable";
-export * from "./observer";
+export * from "./interface/observer";
+export * from "./interface/observable";
